@@ -112,7 +112,7 @@ const NewCycleModal = () => {
 };
 
 
-const togglePondSelection = (pondId: number) => {
+const togglePondSelection = (pondId: string) => {
   const newPonds = formData.selectedPonds.includes(pondId)
     ? formData.selectedPonds.filter((id) => id !== pondId)
     : [...formData.selectedPonds, pondId];
