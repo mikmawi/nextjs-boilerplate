@@ -112,13 +112,16 @@ const NewCycleModal = () => {
 };
 
 
-  const togglePondSelection = (pondId) => {
-    const newPonds = formData.selectedPonds.includes(pondId)
-      ? formData.selectedPonds.filter((id) => id !== pondId)
-      : [...formData.selectedPonds, pondId];
+const togglePondSelection = (pondId: number) => {
+  const newPonds = formData.selectedPonds.includes(pondId)
+    ? formData.selectedPonds.filter((id) => id !== pondId)
+    : [...formData.selectedPonds, pondId];
 
-    handleInputChange("selectedPonds", newPonds);
-  };
+  setFormData((prev) => ({
+    ...prev,
+    selectedPonds: newPonds,
+  }));
+};
 
   const toggleStaffAssignment = (staffId) => {
     const newStaff = formData.assignedStaff.includes(staffId)
