@@ -2,10 +2,82 @@
 import React, { useState } from 'react';
 import { X, Calendar, Fish, Droplets, MapPin, Users, Calculator, AlertCircle, CheckCircle, Info, Plus, Minus } from 'lucide-react';
 
+// --- 1. DEFINICIÓN DE INTERFACES TS ---
+
+// Interfaz para los estanques disponibles
+interface Pond {
+  id: string;
+  name: string;
+  capacity: number;
+  status: 'available' | 'occupied' | 'maintenance';
+  area: string;
+}
+
+// Interfaz para el personal
+interface StaffMember {
+  id: number;
+  name: string;
+  role: 'Supervisor' | 'Técnico Acuícola' | 'Operario';
+  available: boolean;
+}
+
+// Interfaz para el estado principal 'formData'
+interface FormDataState {
+  // Información básica
+  cycleName: string;
+  species: string;
+  variety: string;
+  startDate: string;
+  estimatedDuration: string;
+  
+  // Estanques y capacidad
+  selectedPonds: string[]; // <-- TIPO: Array de strings (IDs de estanques)
+  totalCapacity: number;   // <-- TIPO: Number
+  plannedDensity: string;
+  
+  // Siembra
+  seedlingSource: string;
+  seedlingAge: string;
+  initialQuantity: string;
+  initialWeight: string;
+  initialLength: string;
+  
+  // Parámetros objetivo
+  targetWeight: string;
+  targetLength: string;
+  expectedMortality: string;
+  feedConversionRatio: string;
+  
+  // Alimentación
+  feedType: string;
+  feedingFrequency: string;
+  initialFeedRate: string;
+  
+  // Calidad del agua - rangos objetivo
+  tempMin: string;
+  tempMax: string;
+  phMin: string;
+  phMax: string;
+  oxygenMin: string;
+  
+  // Personal asignado
+  assignedStaff: number[]; // <-- TIPO: Array de numbers (IDs de personal)
+  supervisor: string;      // <-- TIPO: String (ID del supervisor, asumimos string por comodidad)
+  
+  // Presupuesto
+  seedlingCost: string;
+  feedBudget: string;
+  laborCost: string;
+  otherCosts: string;
+  
+  notes: string;
+}
+// --- FIN INTERFACES ---
+
 const NewCycleModal = () => {
   const [isOpen, setIsOpen] = useState(true);
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormDataState>({ // <- Estado inicial tipado
     // Información básica
     cycleName: '',
     species: '',
@@ -56,7 +128,7 @@ const NewCycleModal = () => {
     notes: ''
   });
 
-  const [availablePonds] = useState([
+  const [availablePonds] = useState<Pond[]>([ // <- Array tipado
     { id: 'A1', name: 'Estanque A1', capacity: 1000, status: 'available', area: '500m²' },
     { id: 'A2', name: 'Estanque A2', capacity: 800, status: 'available', area: '400m²' },
     { id: 'B1', name: 'Estanque B1', capacity: 1200, status: 'occupied', area: '600m²' },
@@ -64,7 +136,7 @@ const NewCycleModal = () => {
     { id: 'C1', name: 'Estanque C1', capacity: 1500, status: 'available', area: '750m²' }
   ]);
 
-  const [staff] = useState([
+  const [staff] = useState<StaffMember[]>([ // <- Array tipado
     { id: 1, name: 'Carlos Mendoza', role: 'Supervisor', available: true },
     { id: 2, name: 'María González', role: 'Técnico Acuícola', available: true },
     { id: 3, name: 'José Rivera', role: 'Operario', available: true },
@@ -79,25 +151,40 @@ const NewCycleModal = () => {
     { value: 'bagre', label: 'Bagre', varieties: ['Canal', 'Azul', 'Flathead'] }
   ];
 
-  const handleInputChange = (field, value) => {
+  // --- FUNCIÓN CORREGIDA 1: handleInputChange ---
+  // El parámetro 'field' se tipa como 'keyof FormDataState' (una clave válida del objeto)
+  // El parámetro 'value' se tipa como 'any' para simplificar la compatibilidad con diferentes tipos de input (string, number, array).
+  // Una alternativa más estricta sería: (field: keyof FormDataState, value: FormDataState[keyof FormDataState] | string[] | number[])
+  const handleInputChange = (field: keyof FormDataState, value: any) => {
     setFormData(prev => {
       const updated = { ...prev, [field]: value };
       
       // Calcular capacidad total cuando se seleccionan estanques
+      // La variable 'value' aquí es de tipo string[] (el array de IDs)
       if (field === 'selectedPonds') {
-        const totalCap = value.reduce((sum, pondId) => {
+        // Aseguramos que 'value' es un array de strings para usar 'reduce'
+        const pondIds = value as string[]; 
+        
+        const totalCap = pondIds.reduce((sum, pondId) => {
           const pond = availablePonds.find(p => p.id === pondId);
           return sum + (pond ? pond.capacity : 0);
         }, 0);
-        updated.totalCapacity = totalCap;
+        
+        // La actualización de 'totalCapacity' necesita ser tipada dentro de la función de estado
+        return { ...updated, totalCapacity: totalCap } as FormDataState;
       }
       
       return updated;
     });
   };
 
-  const togglePondSelection = (pondId) => {
+  // --- FUNCIÓN CORREGIDA 2: togglePondSelection ---
+  // El parámetro 'pondId' se tipa como 'string' (ya que los IDs de estanques son strings como 'A1')
+  const togglePondSelection = (pondId: string) => {
+    // Aquí 'formData.selectedPonds' es un string[] (tipado en la interfaz)
     const currentPonds = formData.selectedPonds;
+    
+    // Ahora 'pondId' (string) se usa correctamente con 'currentPonds' (string[])
     const newPonds = currentPonds.includes(pondId)
       ? currentPonds.filter(id => id !== pondId)
       : [...currentPonds, pondId];
@@ -105,8 +192,13 @@ const NewCycleModal = () => {
     handleInputChange('selectedPonds', newPonds);
   };
 
-  const toggleStaffAssignment = (staffId) => {
+  // --- FUNCIÓN CORREGIDA 3: toggleStaffAssignment ---
+  // El parámetro 'staffId' se tipa como 'number' (ya que los IDs de personal son numbers)
+  const toggleStaffAssignment = (staffId: number) => {
+    // Aquí 'formData.assignedStaff' es un number[] (tipado en la interfaz)
     const currentStaff = formData.assignedStaff;
+    
+    // Ahora 'staffId' (number) se usa correctamente con 'currentStaff' (number[])
     const newStaff = currentStaff.includes(staffId)
       ? currentStaff.filter(id => id !== staffId)
       : [...currentStaff, staffId];
@@ -138,16 +230,16 @@ const NewCycleModal = () => {
     return (seedling + feed + labor + other).toFixed(2);
   };
 
-  const getStepValidation = (step) => {
+  const getStepValidation = (step: number): boolean => { // <- Función tipada
     switch (step) {
       case 1:
-        return formData.cycleName && formData.species && formData.startDate;
+        return !!formData.cycleName && !!formData.species && !!formData.startDate;
       case 2:
         return formData.selectedPonds.length > 0;
       case 3:
-        return formData.initialQuantity && formData.seedlingSource;
+        return !!formData.initialQuantity && !!formData.seedlingSource;
       case 4:
-        return formData.targetWeight && formData.feedType;
+        return !!formData.targetWeight && !!formData.feedType;
       case 5:
         return formData.assignedStaff.length > 0;
       default:
@@ -717,7 +809,7 @@ const NewCycleModal = () => {
                       const person = staff.find(s => s.id === staffId);
                       return (
                         <span key={staffId} className="bg-emerald-200 text-emerald-800 px-3 py-1 rounded-full text-sm">
-                          {person.name} - {person.role}
+                          {person?.name} - {person?.role}
                         </span>
                       );
                     })}
