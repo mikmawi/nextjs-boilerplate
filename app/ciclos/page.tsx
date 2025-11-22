@@ -137,11 +137,12 @@ export default function NewCyclePage() {
     setFormData((prev) => {
       const updated = { ...prev, [field]: value };
 
-      if (field === "selectedPonds" && Array.isArray(value)) {
-        const totalCap = value.reduce((sum, pondId) => {
+      if (field === "selectedPonds") {
+        const totalCap = value.reduce<number>((sum, pondId: string) => {
           const pond = availablePonds.find((p) => p.id === pondId);
           return sum + (pond ? pond.capacity : 0);
         }, 0);
+      
         updated.totalCapacity = totalCap;
       }
 
