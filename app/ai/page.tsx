@@ -65,6 +65,11 @@ export default function AquaDashboard() {
 }
 
 // ===================== Componente KPI =====================
+interface KpiCardProps {
+  label: string;
+  value: number | string;
+  trend?: number | string;
+}
 function KpiCard({ label, value, trend }) {
   return (
     <div className="p-4 bg-gradient-to-br from-slate-50 to-slate-100 border rounded-2xl shadow-sm flex flex-col">
