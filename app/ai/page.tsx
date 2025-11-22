@@ -81,7 +81,11 @@ function KpiCard({ label, value, trend }: KpiCardProps) {
 }
 
 // ===================== Panel de IA =====================
-function AIAssistantPanel({ onClose }) {
+interface AIAssistantPanelProps {
+  onClose: () => void;
+}
+
+function AIAssistantPanel({ onClose }: AIAssistantPanelProps) {
   const [tab, setTab] = useState("recs");
 
   return (
@@ -131,7 +135,13 @@ function AIAssistantPanel({ onClose }) {
 }
 
 // ===================== Tabs Helper =====================
-function Tab({ label, active, onClick }) {
+interface TabProps {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}
+
+function Tab({ label, active, onClick }: TabProps) {
   return (
     <button
       onClick={onClick}
