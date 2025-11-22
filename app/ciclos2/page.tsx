@@ -152,7 +152,8 @@ const NewCycleModal = () => {
   ];
 
   // --- FUNCIÓN CORREGIDA 1: handleInputChange ---
-  // Se mantiene el tipado de la versión anterior
+  // El parámetro 'field' se tipa como 'keyof FormDataState' (una clave válida del objeto)
+  // El parámetro 'value' se tipa como 'any' para simplificar la compatibilidad con diferentes tipos de input (string, number, array).
   const handleInputChange = (field: keyof FormDataState, value: any) => {
     setFormData(prev => {
       const updated = { ...prev, [field]: value };
@@ -176,9 +177,12 @@ const NewCycleModal = () => {
   };
 
   // --- FUNCIÓN CORREGIDA 2: togglePondSelection ---
+  // El parámetro 'pondId' se tipa como 'string' (ya que los IDs de estanques son strings como 'A1')
   const togglePondSelection = (pondId: string) => {
+    // Aquí 'formData.selectedPonds' es un string[] (tipado en la interfaz)
     const currentPonds = formData.selectedPonds;
     
+    // Ahora 'pondId' (string) se usa correctamente con 'currentPonds' (string[])
     const newPonds = currentPonds.includes(pondId)
       ? currentPonds.filter(id => id !== pondId)
       : [...currentPonds, pondId];
@@ -187,9 +191,12 @@ const NewCycleModal = () => {
   };
 
   // --- FUNCIÓN CORREGIDA 3: toggleStaffAssignment ---
+  // El parámetro 'staffId' se tipa como 'number' (ya que los IDs de personal son numbers)
   const toggleStaffAssignment = (staffId: number) => {
+    // Aquí 'formData.assignedStaff' es un number[] (tipado en la interfaz)
     const currentStaff = formData.assignedStaff;
     
+    // Ahora 'staffId' (number) se usa correctamente con 'currentStaff' (number[])
     const newStaff = currentStaff.includes(staffId)
       ? currentStaff.filter(id => id !== staffId)
       : [...currentStaff, staffId];
@@ -197,7 +204,6 @@ const NewCycleModal = () => {
     handleInputChange('assignedStaff', newStaff);
   };
 
-  // --- FUNCIÓN CORREGIDA 4: calculateEstimatedProduction ---
   const calculateEstimatedProduction = () => {
     // CORRECCIÓN: Usamos || '0' para asegurar que parseFloat reciba un string
     const quantity = parseFloat(formData.initialQuantity || '0') || 0; 
@@ -214,7 +220,6 @@ const NewCycleModal = () => {
     };
   };
 
-  // --- FUNCIÓN CORREGIDA 5: calculateTotalBudget ---
   const calculateTotalBudget = () => {
     // CORRECCIÓN: Usamos || '0' para asegurar que parseFloat reciba un string
     const seedling = parseFloat(formData.seedlingCost || '0') || 0; 
@@ -273,4 +278,735 @@ const NewCycleModal = () => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden
+      {/* CORRECCIÓN DE SINTAXIS APLICADA EN LA SIGUIENTE LÍNEA */}
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+        {/* Header del Modal */}
+        <div className="bg-gradient-to-r from-teal-700 to-emerald-600 text-white p-6 relative">
+          <button
+            onClick={() => setIsOpen(false)}
+            className="absolute right-4 top-4 p-2 hover:bg-white/20 rounded-lg transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          <h2 className="text-2xl font-bold mb-2">Crear Nuevo Ciclo Productivo</h2>
+          <p className="text-teal-100">Configure todos los parámetros para el nuevo ciclo de producción</p>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="bg-gray-50 px-6 py-4">
+          <div className="flex items-center justify-between mb-4">
+            {steps.map((step) => {
+              const Icon = step.icon;
+              const isActive = step.number === currentStep;
+              const isCompleted = step.number < currentStep;
+              const isValid = getStepValidation(step.number);
+              
+              return (
+                <div key={step.number} className="flex flex-col items-center">
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
+                      isCompleted
+                        ? 'bg-emerald-500 text-white'
+                        : isActive
+                        ? isValid
+                          ? 'bg-teal-600 text-white'
+                          : 'bg-red-500 text-white'
+                        : 'bg-gray-200 text-gray-600'
+                    }`}
+                  >
+                    {isCompleted ? <CheckCircle className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
+                  </div>
+                  <span className="text-xs mt-1 text-center max-w-20">{step.title}</span>
+                </div>
+              );
+            })}
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div
+              className="bg-teal-600 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${(currentStep / steps.length) * 100}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Contenido del Modal */}
+        <div className="p-6 overflow-y-auto max-h-96">
+          {/* Step 1: Información Básica */}
+          {currentStep === 1 && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Nombre del Ciclo *
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    value={formData.cycleName}
+                    onChange={(e) => handleInputChange('cycleName', e.target.value)}
+                    placeholder="Ej: Ciclo Tilapia 2025-01"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Fecha de Inicio *
+                  </label>
+                  <input
+                    type="date"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    value={formData.startDate}
+                    onChange={(e) => handleInputChange('startDate', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Especie *
+                  </label>
+                  <select
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    value={formData.species}
+                    onChange={(e) => handleInputChange('species', e.target.value)}
+                  >
+                    <option value="">Seleccionar especie</option>
+                    {species.map(s => (
+                      <option key={s.value} value={s.value}>{s.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Variedad
+                  </label>
+                  <select
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    value={formData.variety}
+                    onChange={(e) => handleInputChange('variety', e.target.value)}
+                    disabled={!formData.species}
+                  >
+                    <option value="">Seleccionar variedad</option>
+                    {formData.species && species.find(s => s.value === formData.species)?.varieties.map(v => (
+                      <option key={v} value={v}>{v}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Duración Estimada (días)
+                  </label>
+                  <input
+                    type="number"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    value={formData.estimatedDuration}
+                    onChange={(e) => handleInputChange('estimatedDuration', e.target.value)}
+                    placeholder="120"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 2: Selección de Estanques */}
+          {currentStep === 2 && (
+            <div className="space-y-6">
+              <div className="bg-teal-50 p-4 rounded-lg">
+                <h3 className="font-medium text-teal-800 mb-2">Seleccionar Estanques</h3>
+                <p className="text-teal-600 text-sm">Elija los estanques que utilizará para este ciclo productivo</p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {availablePonds.map(pond => {
+                  const isSelected = formData.selectedPonds.includes(pond.id);
+                  const isDisabled = pond.status !== 'available';
+                  
+                  return (
+                    <div
+                      key={pond.id}
+                      className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                        isDisabled
+                          ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-60'
+                          : isSelected
+                          ? 'border-teal-500 bg-teal-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                      onClick={() => !isDisabled && togglePondSelection(pond.id)}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium">{pond.name}</h4>
+                        <div className={`w-3 h-3 rounded-full ${
+                          pond.status === 'available' 
+                            ? 'bg-green-500' 
+                            : pond.status === 'occupied' 
+                            ? 'bg-red-500' 
+                            : 'bg-yellow-500'
+                        }`} />
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        <p>Capacidad: {pond.capacity.toLocaleString()} peces</p>
+                        <p>Área: {pond.area}</p>
+                        <p className="capitalize">Estado: {pond.status === 'available' ? 'Disponible' : pond.status === 'occupied' ? 'Ocupado' : 'Mantenimiento'}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              
+              {formData.selectedPonds.length > 0 && (
+                <div className="bg-emerald-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-emerald-800 mb-2">Resumen de Selección</h4>
+                  <p className="text-emerald-600">
+                    Estanques seleccionados: {formData.selectedPonds.length} | 
+                    Capacidad total: {formData.totalCapacity.toLocaleString()} peces
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Step 3: Parámetros de Siembra */}
+          {currentStep === 3 && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Proveedor de Alevines *
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    value={formData.seedlingSource}
+                    onChange={(e) => handleInputChange('seedlingSource', e.target.value)}
+                    placeholder="Nombre del proveedor"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Edad de Alevines (días)
+                  </label>
+                  <input
+                    type="number"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    value={formData.seedlingAge}
+                    onChange={(e) => handleInputChange('seedlingAge', e.target.value)}
+                    placeholder="30"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Cantidad Inicial *
+                  </label>
+                  <input
+                    type="number"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    value={formData.initialQuantity}
+                    onChange={(e) => handleInputChange('initialQuantity', e.target.value)}
+                    placeholder="1000"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Peso Inicial (g)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    value={formData.initialWeight}
+                    onChange={(e) => handleInputChange('initialWeight', e.target.value)}
+                    placeholder="5.0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Longitud Inicial (cm)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    value={formData.initialLength}
+                    onChange={(e) => handleInputChange('initialLength', e.target.value)}
+                    placeholder="3.5"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Densidad Planificada (peces/m²)
+                  </label>
+                  <input
+                    type="number"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    value={formData.plannedDensity}
+                    onChange={(e) => handleInputChange('plannedDensity', e.target.value)}
+                    placeholder="10"
+                  />
+                </div>
+              </div>
+              
+              {formData.initialQuantity && formData.totalCapacity > 0 && (
+                <div className="bg-yellow-50 p-4 rounded-lg">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-medium text-yellow-800">Verificación de Capacidad</h4>
+                      <p className="text-yellow-700 text-sm mt-1">
+                        Planea sembrar {parseFloat(formData.initialQuantity || '0').toLocaleString()} peces en una capacidad total de {formData.totalCapacity.toLocaleString()} peces.
+                        {parseFloat(formData.initialQuantity || '0') > formData.totalCapacity && (
+                          <span className="text-red-600 font-medium block mt-1">
+                            ⚠️ La cantidad excede la capacidad recomendada
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Step 4: Parámetros de Producción */}
+          {currentStep === 4 && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="md:col-span-2 bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-medium text-gray-800 mb-3">Objetivos de Producción</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Peso Objetivo (g) *
+                      </label>
+                      <input
+                        type="number"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        value={formData.targetWeight}
+                        onChange={(e) => handleInputChange('targetWeight', e.target.value)}
+                        placeholder="250"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Longitud Objetivo (cm)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        value={formData.targetLength}
+                        onChange={(e) => handleInputChange('targetLength', e.target.value)}
+                        placeholder="25.0"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Mortalidad Esperada (%)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        value={formData.expectedMortality}
+                        onChange={(e) => handleInputChange('expectedMortality', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="md:col-span-2 bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-medium text-gray-800 mb-3">Alimentación</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Tipo de Alimento *
+                      </label>
+                      <select
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        value={formData.feedType}
+                        onChange={(e) => handleInputChange('feedType', e.target.value)}
+                      >
+                        <option value="">Seleccionar alimento</option>
+                        <option value="starter">Alimento Iniciador</option>
+                        <option value="growth">Alimento Crecimiento</option>
+                        <option value="finishing">Alimento Engorde</option>
+                        <option value="premium">Alimento Premium</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Frecuencia Diaria
+                      </label>
+                      <input
+                        type="number"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        value={formData.feedingFrequency}
+                        onChange={(e) => handleInputChange('feedingFrequency', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Tasa Alimenticia Inicial (%)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        value={formData.initialFeedRate}
+                        onChange={(e) => handleInputChange('initialFeedRate', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="md:col-span-2 bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-medium text-gray-800 mb-3">Parámetros de Calidad del Agua</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Temp. Mín (°C)</label>
+                      <input
+                        type="number"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        value={formData.tempMin}
+                        onChange={(e) => handleInputChange('tempMin', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Temp. Máx (°C)</label>
+                      <input
+                        type="number"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        value={formData.tempMax}
+                        onChange={(e) => handleInputChange('tempMax', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">pH Mín</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        value={formData.phMin}
+                        onChange={(e) => handleInputChange('phMin', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">pH Máx</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        value={formData.phMax}
+                        onChange={(e) => handleInputChange('phMax', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">O₂ Mín (mg/L)</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        value={formData.oxygenMin}
+                        onChange={(e) => handleInputChange('oxygenMin', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Proyección de producción */}
+              {formData.initialQuantity && formData.targetWeight && (
+                <div className="bg-emerald-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-emerald-800 mb-3">Proyección de Producción</h4>
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div className="bg-white p-3 rounded">
+                      <div className="text-2xl font-bold text-emerald-600">{calculateEstimatedProduction().survivingFish.toLocaleString()}</div>
+                      <div className="text-sm text-gray-600">Peces Supervivientes</div>
+                    </div>
+                    <div className="bg-white p-3 rounded">
+                      <div className="text-2xl font-bold text-teal-600">{calculateEstimatedProduction().totalProduction} kg</div>
+                      <div className="text-sm text-gray-600">Producción Total</div>
+                    </div>
+                    <div className="bg-white p-3 rounded">
+                      <div className="text-2xl font-bold text-cyan-600">{calculateEstimatedProduction().densityPerM2}</div>
+                      <div className="text-sm text-gray-600">Peces/m² Final</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Step 5: Asignación de Personal */}
+          {currentStep === 5 && (
+            <div className="space-y-6">
+              <div className="bg-teal-50 p-4 rounded-lg">
+                <h3 className="font-medium text-teal-800 mb-2">Asignar Personal al Ciclo</h3>
+                <p className="text-teal-600 text-sm">Seleccione el equipo que será responsable de este ciclo productivo</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Supervisor Principal
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {staff.filter(s => s.role === 'Supervisor' && s.available).map(person => (
+                    <div
+                      key={person.id}
+                      className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                        formData.supervisor === person.id.toString()
+                          ? 'border-teal-500 bg-teal-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                      onClick={() => handleInputChange('supervisor', person.id.toString())}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium">{person.name}</h4>
+                          <p className="text-sm text-gray-600">{person.role}</p>
+                        </div>
+                        <div className="w-3 h-3 bg-green-500 rounded-full" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Equipo de Trabajo
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {staff.filter(s => s.role !== 'Supervisor').map(person => {
+                    const isSelected = formData.assignedStaff.includes(person.id);
+                    const isDisabled = !person.available;
+                    
+                    return (
+                      <div
+                        key={person.id}
+                        className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                          isDisabled
+                            ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-60'
+                            : isSelected
+                            ? 'border-teal-500 bg-teal-50'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                        onClick={() => !isDisabled && toggleStaffAssignment(person.id)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="font-medium">{person.name}</h4>
+                            <p className="text-sm text-gray-600">{person.role}</p>
+                          </div>
+                          <div className={`w-3 h-3 rounded-full ${person.available ? 'bg-green-500' : 'bg-red-500'}`} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {formData.assignedStaff.length > 0 && (
+                <div className="bg-emerald-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-emerald-800 mb-2">Personal Asignado</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {formData.assignedStaff.map(staffId => {
+                      const person = staff.find(s => s.id === staffId);
+                      return (
+                        <span key={staffId} className="bg-emerald-200 text-emerald-800 px-3 py-1 rounded-full text-sm">
+                          {person?.name} - {person?.role}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-medium text-gray-800 mb-3">Presupuesto Estimado</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Costo Alevines ($)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      value={formData.seedlingCost}
+                      onChange={(e) => handleInputChange('seedlingCost', e.target.value)}
+                      placeholder="5000.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Presupuesto Alimento ($)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      value={formData.feedBudget}
+                      onChange={(e) => handleInputChange('feedBudget', e.target.value)}
+                      placeholder="15000.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Costo Mano de Obra ($)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      value={formData.laborCost}
+                      onChange={(e) => handleInputChange('laborCost', e.target.value)}
+                      placeholder="8000.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Otros Costos ($)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      value={formData.otherCosts}
+                      onChange={(e) => handleInputChange('otherCosts', e.target.value)}
+                      placeholder="2000.00"
+                    />
+                  </div>
+                </div>
+                
+                {(formData.seedlingCost || formData.feedBudget || formData.laborCost || formData.otherCosts) && (
+                  <div className="mt-4 p-3 bg-teal-100 rounded-lg">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-teal-800">${calculateTotalBudget()}</div>
+                      <div className="text-teal-600 text-sm">Presupuesto Total Estimado</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Step 6: Resumen Final */}
+          {currentStep === 6 && (
+            <div className="space-y-6">
+              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-6 rounded-lg">
+                <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">Resumen del Nuevo Ciclo</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Información Básica */}
+                  <div className="bg-white p-4 rounded-lg shadow-sm">
+                    <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                      <Info className="w-4 h-4 text-teal-500" />
+                      Información Básica
+                    </h4>
+                    <div className="space-y-2 text-sm">
+                      <div><span className="font-medium">Nombre:</span> {formData.cycleName}</div>
+                      <div><span className="font-medium">Especie:</span> {species.find(s => s.value === formData.species)?.label} {formData.variety && `- ${formData.variety}`}</div>
+                      <div><span className="font-medium">Inicio:</span> {new Date(formData.startDate).toLocaleDateString()}</div>
+                      <div><span className="font-medium">Duración:</span> {formData.estimatedDuration} días</div>
+                    </div>
+                  </div>
+
+                  {/* Estanques */}
+                  <div className="bg-white p-4 rounded-lg shadow-sm">
+                    <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-emerald-500" />
+                      Estanques
+                    </h4>
+                    <div className="space-y-2 text-sm">
+                      <div><span className="font-medium">Cantidad:</span> {formData.selectedPonds.length} estanques</div>
+                      <div><span className="font-medium">Capacidad Total:</span> {formData.totalCapacity.toLocaleString()} peces</div>
+                      <div className="flex flex-wrap gap-1">
+                        {formData.selectedPonds.map(pondId => (
+                          <span key={pondId} className="bg-emerald-100 text-emerald-800 px-2 py-1 rounded text-xs">
+                            {availablePonds.find(p => p.id === pondId)?.name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Siembra */}
+                  <div className="bg-white p-4 rounded-lg shadow-sm">
+                    <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                      <Fish className="w-4 h-4 text-cyan-500" />
+                      Parámetros de Siembra
+                    </h4>
+                    <div className="space-y-2 text-sm">
+                      <div><span className="font-medium">Cantidad:</span> {parseFloat(formData.initialQuantity || '0').toLocaleString()} peces</div>
+                      <div><span className="font-medium">Proveedor:</span> {formData.seedlingSource}</div>
+                      <div><span className="font-medium">Peso inicial:</span> {formData.initialWeight}g</div>
+                      <div><span className="font-medium">Edad:</span> {formData.seedlingAge} días</div>
+                    </div>
+                  </div>
+
+                  {/* Objetivos */}
+                  <div className="bg-white p-4 rounded-lg shadow-sm">
+                    <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                      <Calculator className="w-4 h-4 text-slate-500" />
+                      Objetivos de Producción
+                    </h4>
+                    <div className="space-y-2 text-sm">
+                      <div><span className="font-medium">Peso objetivo:</span> {formData.targetWeight}g</div>
+                      <div><span className="font-medium">Mortalidad esperada:</span> {formData.expectedMortality}%</div>
+                      <div><span className="font-medium">Tipo de alimento:</span> {formData.feedType}</div>
+                      <div><span className="font-medium">Frecuencia:</span> {formData.feedingFrequency} veces/día</div>
+                    </div>
+                  </div>
+
+                  {/* Personal */}
+                  <div className="bg-white p-4 rounded-lg shadow-sm">
+                    <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                      <Users className="w-4 h-4 text-amber-500" />
+                      Personal Asignado
+                    </h4>
+                    <div className="space-y-2 text-sm">
+                      <div>
+                        <span className="font-medium">Supervisor:</span> {staff.find(s => s.id.toString() === formData.supervisor)?.name}
+                      </div>
+                      <div>
+                        <span className="font-medium">Equipo:</span> {formData.assignedStaff.length} personas
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Presupuesto */}
+                  <div className="bg-white p-4 rounded-lg shadow-sm">
+                    <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                      <Calculator className="w-4 h-4 text-rose-500" />
+                      Presupuesto
+                    </h4>
+                    <div className="space-y-2 text-sm">
+                      <div><span className="font-medium">Alevines:</span> ${parseFloat(formData.seedlingCost || '0').toFixed(2)}</div>
+                      <div><span className="font-medium">Alimento:</span> ${parseFloat(formData.feedBudget || '0').toFixed(2)}</div>
+                      <div><span className="font-medium">Mano de obra:</span> ${parseFloat(formData.laborCost || '0').toFixed(2)}</div>
+                      <div><span className="font-medium">Otros costos:</span> ${parseFloat(formData.otherCosts || '0').toFixed(2)}</div>
+                      <div className="border-t pt-2 mt-2">
+                        <span className="font-bold">Total: ${calculateTotalBudget()}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Proyecciones */}
+                {formData.initialQuantity && formData.targetWeight && (
+                  <div className="mt-6 bg-gradient-to-r from-teal-500 to-emerald-500 text-white p-4 rounded-lg">
+                    <h4 className="font-semibold mb-3 text-center">Proyección de Resultados</h4>
+                    <div className="grid grid-cols-3 gap-4 text-center">
+                      <div>
+                        <div className="text-2xl font-bold">{calculateEstimatedProduction().survivingFish.toLocaleString()}</div>
+                        <div className="text-sm opacity-90">Peces Finales</div>
+                      </div>
+                      <div>
+                        <div className="text-2xl font-bold">{calculateEstimatedProduction().totalProduction} kg</div>
+                        <div className="text-sm opacity-90">Producción Total</div>
+                      </div>
+                      <div>
+                        <div className="text-2xl font-bold">${(parseFloat(calculateEstimatedProduction().totalProduction) * 8).toFixed(0)}</div>
+                        <div className="text-sm opacity-90">Ingresos Est. ($8/kg)</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Notas adicionales */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Notas y Observaciones
+                </label>
+                <textarea
+                  className="w-full px-
