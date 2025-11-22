@@ -70,7 +70,7 @@ interface KpiCardProps {
   value: number | string;
   trend?: number | string;
 }
-function KpiCard({ label, value, trend }) {
+function KpiCard({ label, value, trend }: KpiCardProps) {
   return (
     <div className="p-4 bg-gradient-to-br from-slate-50 to-slate-100 border rounded-2xl shadow-sm flex flex-col">
       <span className="text-xs text-slate-500">{label}</span>
