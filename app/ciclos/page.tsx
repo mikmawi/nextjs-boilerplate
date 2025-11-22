@@ -92,21 +92,25 @@ const NewCycleModal = () => {
     { value: "bagre", label: "Bagre", varieties: ["Canal", "Azul", "Flathead"] },
   ];
 
-  const handleInputChange = (field, value) => {
-    setFormData((prev) => {
-      const updated = { ...prev, [field]: value };
+ const handleInputChange = (
+  field: keyof typeof formData,
+  value: any
+) => {
+  setFormData((prev) => {
+    const updated = { ...prev, [field]: value };
 
-      if (field === "selectedPonds") {
-        const totalCap = value.reduce((sum, pondId) => {
-          const pond = availablePonds.find((p) => p.id === pondId);
-          return sum + (pond ? pond.capacity : 0);
-        }, 0);
-        updated.totalCapacity = totalCap;
-      }
+    if (field === "selectedPonds") {
+      const totalCap = value.reduce((sum: number, pondId: string) => {
+        const pond = availablePonds.find((p) => p.id === pondId);
+        return sum + (pond ? pond.capacity : 0);
+      }, 0);
+      updated.totalCapacity = totalCap;
+    }
 
-      return updated;
-    });
-  };
+    return updated;
+  });
+};
+
 
   const togglePondSelection = (pondId) => {
     const newPonds = formData.selectedPonds.includes(pondId)
